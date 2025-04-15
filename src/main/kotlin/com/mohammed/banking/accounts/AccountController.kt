@@ -224,5 +224,3 @@ data class TransferRequestDTO(
 data class TransferResponseDTO(
     val newBalance: BigDecimal
 )
-
-

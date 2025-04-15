@@ -3,7 +3,6 @@ package com.mohammed.banking.users
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
