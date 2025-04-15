@@ -65,6 +65,12 @@ class KYCController(
                 .body(mapOf("error" to "you must be 18 or older to register"))
         }
 
+        if (request.salary < BigDecimal(100) || request.salary > BigDecimal(1000000)) {
+            return ResponseEntity
+                .badRequest()
+                .body(mapOf("error" to "salary must be between 100 and 1,000,000 KD"))
+        }
+
         val kyc = if (existing != null) { // updating data
             existing.copy(
                 user = user,

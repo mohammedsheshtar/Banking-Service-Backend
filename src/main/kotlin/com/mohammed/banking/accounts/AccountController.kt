@@ -53,6 +53,19 @@ class AccountController(
         val user = userRepository.findById(request.userId).orElse(null)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "User with ID ${request.userId} was not found"))
 
+        if (request.initialBalance < BigDecimal(10) || request.initialBalance > BigDecimal(1000000)) {
+            return ResponseEntity
+                .badRequest()
+                .body(mapOf("error" to "Initial balance must be between 10 and 1,000,000 KD"))
+        }
+
+        val userAccounts = accountRepository.findAll().filter { it.user.id == user.id && it.isActive }
+        if (userAccounts.size >= 5) {
+            return ResponseEntity
+                .badRequest()
+                .body(mapOf("error" to "user has reached the maximum limit of 5 active accounts"))
+        }
+
         val account = accountRepository.save(
             AccountEntity(
                 user = user,
