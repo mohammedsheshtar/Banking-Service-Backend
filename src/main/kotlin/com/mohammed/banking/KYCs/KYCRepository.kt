@@ -10,7 +10,7 @@ import java.time.LocalDate
 /*
  * the annotation "Named" is used so that we can inject our repository in other modules
  * that require interaction with the database. As you can see, the interface we made is of type JpaRepository such
- * that Spring Data JPA will be able to do all the SQL operations behind the scenes including the function we made for this interface
+ * that Spring Data JPA will be able to do all the SQL operations behind the scenes including the function we made for this interface.
  */
 @Named
 interface KYCRepository : JpaRepository<KYCEntity, Long> {
@@ -20,13 +20,13 @@ interface KYCRepository : JpaRepository<KYCEntity, Long> {
 
 /*
  * the annotation @Entity tells spring that this is the data class that will be mapped to the table in our database
- * and @Table gives us the ability to explicitly tell spring the name of the table
+ * and @Table gives us the ability to explicitly tell spring the name of the table.
  */
 @Entity
 @Table(name = "KYCs")
 data class KYCEntity(
-    @Id // tells Spring that this is our primary key id in the table
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // we want to tell spring that the id will be incrementally generated
+    @Id // tells Spring that this is our primary key id in the table.
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // we want to tell spring that the id will be incrementally generated.
     val id: Long? = null,
 
     /*
@@ -40,7 +40,7 @@ data class KYCEntity(
     @JoinColumn(name = "user_id")
     val user: UserEntity,
 
-    // @Column explicitly tells spring which column this variable represents because it does not have the exact same name
+    // @Column explicitly tells spring which column this variable represents because it does not have the exact same name.
     @Column(name = "date_of_birth")
     val dateOfBirth: LocalDate,
 
@@ -53,6 +53,6 @@ data class KYCEntity(
     @Column(precision = 9, scale = 3)
     val salary: BigDecimal
 ){
-    // this constructor is crucial for not letting JPA crash out when there is no default value when instantiating an entity via reflection
+    // this constructor is crucial for not letting JPA crash out when there is no default value when instantiating an entity via reflection.
     constructor() : this(null, UserEntity(), LocalDate.MIN, "", "", BigDecimal.ZERO)
 }
