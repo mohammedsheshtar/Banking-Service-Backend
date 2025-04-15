@@ -11,7 +11,7 @@
  * Moreover, I did not create a controller file for the transactions entity because we were required to create one service related to it, and it was
  * tied to accounts. Therefore, I added the transfer of funds service in the account's controller instead of making a whole
  * controller file just for it in transactions.
-* */
+ */
 
 package com.mohammed.banking
 

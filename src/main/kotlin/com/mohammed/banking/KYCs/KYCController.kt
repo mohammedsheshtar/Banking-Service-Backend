@@ -1,7 +1,7 @@
 package com.mohammed.banking.KYCs
 
-
-import com.mohammed.banking.users.UserEntity
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import com.mohammed.banking.users.UserRepository
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
@@ -27,18 +27,23 @@ class KYCController(
      * fetch all the KYC data available to that user in our database and send it back to the client.
      */
     @GetMapping("/users/v1/kyc/{userId}")
-    fun listKYC(@PathVariable userId: Long): KYCResponseDTO {
+    fun listKYC(@PathVariable userId: Long): ResponseEntity<Any> {
         val kyc = kycRepository.findByUserId(userId)
-            ?: throw IllegalArgumentException("user not found")
+            ?: return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(mapOf("error" to "User with ID $userId was not found"))
 
-        return KYCResponseDTO(
-            userId = userId,
-            firstName = kyc.firstName,
-            lastName = kyc.lastName,
-            dateOfBirth = kyc.dateOfBirth,
-            salary = kyc.salary
+        return ResponseEntity.ok(
+            KYCResponseDTO(
+                userId = userId,
+                firstName = kyc.firstName,
+                lastName = kyc.lastName,
+                dateOfBirth = kyc.dateOfBirth,
+                salary = kyc.salary
+            )
         )
     }
+
 
     /* this is our POST endpoint, this controller is responsible for creating/updating the KYC data related to the user.
      * We first check if the user exists from the data given to us, if not, tell the client the user is not found,
@@ -47,11 +52,18 @@ class KYCController(
      * then update his/her KYC data with the newly received data. Finally, we return the results of the operation to the client.
      */
     @PostMapping("/users/v1/kyc")
-    fun addOrUpdateKYC(@RequestBody request: KYCRequestDTO): KYCResponseDTO {
-        val user = userRepository.findById(request.userId).orElseThrow {
-            IllegalArgumentException("user not found")
-        }
+    fun addOrUpdateKYC(@RequestBody request: KYCRequestDTO): ResponseEntity<Any> {
+        val user = userRepository.findById(request.userId).orElse(null)
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(mapOf("error" to "User with ID ${request.userId} was not found"))
+
         val existing = kycRepository.findByUserId(request.userId) // retrieving whatever data available in the KYC database for this user
+
+        val age = java.time.Period.between(request.dateOfBirth, LocalDate.now()).years
+        if (age < 18) {
+             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(mapOf("error" to "you must be 18 or older to register"))
+        }
 
         val kyc = if (existing != null) { // updating data
             existing.copy(
@@ -73,13 +85,14 @@ class KYCController(
 
         val saved = kycRepository.save(kyc) // saving the new/updated data
 
-        return KYCResponseDTO( // returning the results of the operation to the client
+        return ResponseEntity.ok( KYCResponseDTO( // returning the results of the operation to the client
             userId = saved.user.id!!,
             firstName = saved.firstName,
             lastName = saved.lastName,
             dateOfBirth = saved.dateOfBirth,
             salary = saved.salary
-        )
+        ))
+
     }
 }
 

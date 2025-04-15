@@ -6,6 +6,8 @@ import com.mohammed.banking.users.UserRepository
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.security.SecureRandom
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 
 /*
  * @RestController tells Spring that this file will be a controller that listens to HTTP requests of clients
@@ -47,10 +49,9 @@ class AccountController(
      * the newly generated account number.
      */
     @PostMapping("/accounts/v1/accounts")
-    fun addAccount(@RequestBody request: CreateAccountRequest): AccountResponseDTO {
-        val user = userRepository.findById(request.userId).orElseThrow {
-            IllegalArgumentException("User with ID ${request.userId} not found")
-        }
+    fun addAccount(@RequestBody request: CreateAccountRequest): ResponseEntity<Any> {
+        val user = userRepository.findById(request.userId).orElse(null)
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "User with ID ${request.userId} was not found"))
 
         val account = accountRepository.save(
             AccountEntity(
@@ -61,13 +62,12 @@ class AccountController(
                 accountNumber = generateUniqueAccountNumber()
             )
         )
-        return AccountResponseDTO(
+        return ResponseEntity.ok( AccountResponseDTO(
             userId = account.user.id!!,
             accountNumber = account.accountNumber,
             name = account.name,
             balance = account.balance
-
-        )
+        ))
     }
 
     /*
@@ -78,12 +78,14 @@ class AccountController(
      * but will not be able to be shown to anybody because our GET endpoint only retrieves accounts that are active (isActive = true).
      */
     @PostMapping("/accounts/v1/accounts/{accountNumber}/close")
-    fun closeAccount(@PathVariable accountNumber: String) {
+    fun closeAccount(@PathVariable accountNumber: String): ResponseEntity<Any> {
         val account = accountRepository.findByAccountNumber(accountNumber)
-            ?: throw IllegalArgumentException("Account with number $accountNumber not found")
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "account number $accountNumber does not exist"))
 
         val updateAccount = account.copy(isActive = false)
         accountRepository.save(updateAccount)
+
+        return ResponseEntity.noContent().build()
     }
 
     /*
@@ -98,27 +100,38 @@ class AccountController(
      * source account.
      */
     @PostMapping("/accounts/v1/accounts/transfer")
-    fun transferFunds(@RequestBody request: TransferRequestDTO): TransferResponseDTO{
+    fun transferFunds(@RequestBody request: TransferRequestDTO): ResponseEntity<Any>{
         val sourceAccount = accountRepository.findByAccountNumber(request.sourceAccountNumber)
-            ?: throw IllegalArgumentException("source account not found")
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(mapOf("error" to "source account number ${request.sourceAccountNumber} was not found"))
 
         val destinationAccount = accountRepository.findByAccountNumber(request.destinationAccountNumber)
-            ?: throw IllegalArgumentException("destination account not found")
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(mapOf("error" to "destination account number ${request.sourceAccountNumber} was not found"))
 
         if (sourceAccount.balance < request.amount){
-            throw IllegalArgumentException("insufficient balance")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "insufficient balance, source account has less than required transfer amount"))
         }
 
-        if (!sourceAccount.isActive || !destinationAccount.isActive) {
-            throw IllegalArgumentException("one of the accounts is inactive")
+        if (!sourceAccount.isActive) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "source account is closed"))
+        }
+
+        if (!destinationAccount.isActive) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "destination account is closed"))
         }
 
         if (request.amount <= BigDecimal.ZERO) {
-            throw IllegalArgumentException("amount must be positive")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "amount cannot be zero"))
         }
 
         if (request.sourceAccountNumber == request.destinationAccountNumber) {
-            throw IllegalArgumentException("you can't transfer to the same account...")
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "you can't transfer to the same account..."))
         }
 
         val updatedSource = sourceAccount.copy(balance = sourceAccount.balance - request.amount)
@@ -133,7 +146,7 @@ class AccountController(
             amount = request.amount)
         )
 
-        return TransferResponseDTO(newBalance = updatedSource.balance)
+        return ResponseEntity.ok(TransferResponseDTO(newBalance = updatedSource.balance))
 
     }
 

@@ -3,6 +3,8 @@ package com.mohammed.banking.users
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 /*
@@ -24,12 +26,29 @@ class UserController(
      * throw an error called MethodArgumentNotValidException.
      */
     @PostMapping("/users/v1/register")
-    fun createUser(@Valid @RequestBody request: CreateUserDTO) {
+    fun createUser(@Valid @RequestBody request: CreateUserDTO): ResponseEntity<Any> {
         if (userRepository.existsByUsername(request.username)) {
-            throw IllegalArgumentException("Username '${request.username}' is already taken.") // if the username already exists, we want the user to try another one.
+            return ResponseEntity
+                .badRequest()
+                .body(mapOf("error" to "Username '${request.username}' is already taken."))
         }
 
-        userRepository.save(UserEntity(username = request.username, password = request.password)) // saves the new data into our database.
+        if (request.username.length >= 12) {
+            return ResponseEntity
+                .badRequest()
+                .body(mapOf("error" to "Username '${request.username}' is too long."))
+        }
+
+        if (request.username.length <= 4) {
+            return ResponseEntity
+                .badRequest()
+                .body(mapOf("error" to "Username '${request.username}' is too short."))
+        }
+
+        userRepository.save(UserEntity(username = request.username, password = request.password))
+        return ResponseEntity.ok().build()
+
+
     }
 }
 
