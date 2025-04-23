@@ -28,9 +28,16 @@ data class UserEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY) // we want to tell spring that the id will be incrementally generated.
     val id: Long? = null,
     val username: String,
-    val password: String
+    val password: String,
+
+    @Enumerated(EnumType.STRING)
+    val role: Roles = Roles.USER
 
 ){
     // this constructor is crucial for not letting JPA crash out when there is no default value when instantiating an entity via reflection.
-    constructor() : this(null, "", "")
+    constructor() : this(null, "", "",  Roles.USER)
+}
+
+enum class Roles {
+    USER, ADMIN
 }
