@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class UserServices(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository //injecting user's database into this file (see UserRepository.kt for more information).
 ) {
 
     fun createUser(request: CreateUserDTO): ResponseEntity<Any> {
