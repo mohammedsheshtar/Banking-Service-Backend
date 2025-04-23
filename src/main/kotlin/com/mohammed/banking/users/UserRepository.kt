@@ -12,6 +12,8 @@ import org.springframework.data.jpa.repository.JpaRepository
 @Named
 interface UserRepository : JpaRepository <UserEntity, Long> {
     fun existsByUsername(username: String): Boolean
+    fun findByUsername(username: String): UserEntity?
+
     // equivalent SQL operation: SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END FROM users WHERE username = ?;
 }
 

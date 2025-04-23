@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
  */
 @RestController
 class UserController(
-   private val userRepository: UserRepository // injecting user's database into this file (see UserRepository.kt for more information).
+   private val userServices: UserServices
 ) {
     /*
      * this is the controller that registers users,it receives a JSON request body, and the @RequestBody annotation tells
@@ -26,28 +26,7 @@ class UserController(
      */
     @PostMapping("/users/v1/register")
     fun createUser(@Valid @RequestBody request: CreateUserDTO): ResponseEntity<Any> {
-        if (userRepository.existsByUsername(request.username)) {
-            return ResponseEntity
-                .badRequest()
-                .body(mapOf("error" to "Username '${request.username}' is already taken."))
-        }
-
-        if (request.username.length >= 12) {
-            return ResponseEntity
-                .badRequest()
-                .body(mapOf("error" to "Username '${request.username}' is too long."))
-        }
-
-        if (request.username.length <= 4) {
-            return ResponseEntity
-                .badRequest()
-                .body(mapOf("error" to "Username '${request.username}' is too short."))
-        }
-
-        userRepository.save(UserEntity(username = request.username, password = request.password))
-        return ResponseEntity.ok().build()
-
-
+       return userServices.createUser(request)
     }
 }
 
