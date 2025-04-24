@@ -38,7 +38,7 @@ class AccountsServices(
         val user = userRepository.findById(request.userId).orElse(null)
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "User with ID ${request.userId} was not found"))
 
-        if (request.initialBalance < BigDecimal(10) || request.initialBalance > BigDecimal(1000000)) {
+        if (request.initialBalance < BigDecimal(10.000) || request.initialBalance > BigDecimal(1000000.000)) {
             return ResponseEntity
                 .badRequest()
                 .body(mapOf("error" to "Initial balance must be between 10 and 1,000,000 KD"))
@@ -70,7 +70,7 @@ class AccountsServices(
 
     fun closeAccount(accountNumber: String): ResponseEntity<Any> {
         val account = accountRepository.findByAccountNumber(accountNumber)
-            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(mapOf("error" to "account number $accountNumber does not exist"))
+            ?: return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(mapOf("error" to "account number $accountNumber does not exist"))
 
         val updateAccount = account.copy(isActive = false)
         accountRepository.save(updateAccount)
@@ -87,11 +87,6 @@ class AccountsServices(
             ?: return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(mapOf("error" to "destination account number ${request.sourceAccountNumber} was not found"))
 
-        if (sourceAccount.balance < request.amount){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(mapOf("error" to "insufficient balance, source account has less than required transfer amount"))
-        }
-
         if (!sourceAccount.isActive) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(mapOf("error" to "source account is closed"))
@@ -100,6 +95,11 @@ class AccountsServices(
         if (!destinationAccount.isActive) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(mapOf("error" to "destination account is closed"))
+        }
+
+        if (sourceAccount.balance < request.amount){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(mapOf("error" to "insufficient balance, source account has less than required transfer amount"))
         }
 
         if (request.amount <= BigDecimal.ZERO) {

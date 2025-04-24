@@ -31,7 +31,8 @@ class SecurityConfig(
             .authorizeHttpRequests {
                 it.requestMatchers(
                     "/users/v1/register",
-                    "/authentication/login"
+                    "/authentication/login",
+                    "/hello"
                 ).permitAll()
                 it.requestMatchers(
                     "/accounts/v1/accounts",

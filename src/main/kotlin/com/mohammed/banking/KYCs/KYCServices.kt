@@ -42,11 +42,11 @@ class KYCServices(
 
         val age = java.time.Period.between(request.dateOfBirth, LocalDate.now()).years
         if (age < 18) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(mapOf("error" to "you must be 18 or older to register"))
         }
 
-        if (request.salary < BigDecimal(100) || request.salary > BigDecimal(1000000)) {
+        if (request.salary < BigDecimal(100.000) || request.salary > BigDecimal(1000000.000)) {
             return ResponseEntity
                 .badRequest()
                 .body(mapOf("error" to "salary must be between 100 and 1,000,000 KD"))
