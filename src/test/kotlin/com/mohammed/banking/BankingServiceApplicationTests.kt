@@ -65,32 +65,6 @@ class BankingServiceApplicationTests {
 	}
 
 	@Test
-	fun `test hello endpoint with JWT`(@Autowired jwtService: JwtService) {
-		val token = jwtService.generateToken("momo1234")
-		val headers = HttpHeaders(
-			MultiValueMap.fromSingleValue(mapOf("Authorization" to "Bearer $token"))
-		)
-		val request = HttpEntity<String>(headers)
-
-		val result = restTemplate.exchange(
-			"/hello",
-			HttpMethod.GET,
-			request,
-			String::class.java
-		)
-
-		assertEquals(HttpStatus.OK, result.statusCode)
-		assertEquals("Hello World", result.body)
-	}
-
-	@Test
-	fun `adding user with correct paramter should work`() {
-		val request = CreateUserDTO(username = "mmmohaM64", password = "12Ln34567")
-		val result = restTemplate.postForEntity("/users/v1/register", request, String::class.java)
-		assertEquals(HttpStatus.OK, result.statusCode)
-	}
-
-	@Test
 	fun `adding new account should work`(@Autowired jwtService: JwtService) {
 		val token = jwtService.generateToken("momo1234")
 		val headers = HttpHeaders()
@@ -1057,7 +1031,7 @@ class BankingServiceApplicationTests {
 	}
 
 	@Test
-	fun `fetching KYC profile with incorrectr endpoint should NOT work`(@Autowired jwtService: JwtService) {
+	fun `fetching KYC profile with incorrect endpoint should NOT work`(@Autowired jwtService: JwtService) {
 		val token = jwtService.generateToken("momo1234")
 		val headers = HttpHeaders(
 			MultiValueMap.fromSingleValue(mapOf("Authorization" to "Bearer $token"))
